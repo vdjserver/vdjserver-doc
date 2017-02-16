@@ -1,0 +1,6 @@
+[submodule "vdj_pipe"]
+	path = vdj_pipe
+	url = https://git@bitbucket.org/vdjserver/vdj_pipe.git
+[submodule "vdjml"]
+	path = vdjml
+	url = https://git@bitbucket.org/vdjserver/vdjml.git
