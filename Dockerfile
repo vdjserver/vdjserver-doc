@@ -82,8 +82,10 @@ VOLUME ["/var/www/html/vdjml"]
 VOLUME ["/var/www/html/xsd"]
 
 ###
-### QuickStart
+### VDJServer
 ###
 
-RUN mkdir /var/www/html/docs
+RUN cp -R /vdjserver-doc-root/vdjserver /var/www/html/docs
 RUN cp -R /vdjserver-doc-root/QuickStart /var/www/html/docs/QuickStart
+
+VOLUME ["/var/www/html/docs"]
