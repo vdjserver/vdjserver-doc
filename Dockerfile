@@ -80,3 +80,12 @@ RUN cp -R /vdjserver-doc-root/vdjml/out/binding/python/xsd /var/www/html/xsd
 
 VOLUME ["/var/www/html/vdjml"]
 VOLUME ["/var/www/html/xsd"]
+
+###
+### VDJServer
+###
+
+RUN cp -R /vdjserver-doc-root/vdjserver /var/www/html/docs
+RUN cp -R /vdjserver-doc-root/QuickStart /var/www/html/docs/QuickStart
+
+VOLUME ["/var/www/html/docs"]
