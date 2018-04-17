@@ -27,10 +27,10 @@ RUN apt-get update && apt-get install -y --fix-missing\
     zlib1g-dev
 
 RUN pip install \
-    biopython \
     lxml \
     numpy \
-    reportlab
+    reportlab \
+    biopython
 
 # Set boost config vars and files
 ENV BOOST_VERSION 1.57.0
