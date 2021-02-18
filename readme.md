@@ -2,6 +2,15 @@
 
 An umbrella repository to bring together documentation for VDJServer and its tools.
 
+We are moving documentation to ReadTheDocs...
+
+```
+$ cd docs
+$ docker run -v $PWD:/work:z -it airrc/airr-standards bash
+$ cd work
+$ sphinx-build -b html . ./_build
+```
+
 An automated build is configured at [docker hub](https://hub.docker.com/r/vdjserver/doc/)
 to generate new docker images when changes are posted to the repository.
 
