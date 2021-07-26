@@ -26,7 +26,7 @@ share your study and sequence data, as well as privately share data between user
 
     Getting Started <user/getting_started>
     User's Guide <user/user>
-    Community Data Portal
+    Community Data Portal <user/cdp>
     Developer's Guide <developer/developer>
     Administration Guide <admin/admin>
 
