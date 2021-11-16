@@ -71,5 +71,33 @@ VDJServer administrator. The basic requirements include:
     Contact VDJServer (vdjserver@utsouthwestern.edu) to initiate publishing
     your study.
 
+Data Charges for Repository Copies
+----------------------------------
+
+VDJServer offers the ability to provide a complete copy of the data repository
+to the customer. This can be a quicker option to acquire large quantities of data versus
+downloading through the portal. As this requires additional time and resources by
+VDJServer personnel, we need to impose a data charge for cost recovery. The
+following options are available:
+
+1. (Price: $3500) Upload data to an Amazon S3 bucket. Either to a customer-provided bucket or
+    we will create a bucket and provide access. In the case that we create the bucket, it
+    will only be accessible for a pre-determined amount of time (typically one month), so
+    the customer is required to move the data into their own bucket.
+
+2. (Price: $3500) FEDEX/UPS a hard disk drive with the data to the customer. We purchase
+    a standard SATA hard drive but can use a customer-provided SATA hard drive if desired.
+    The hard drive becomes the customer's property and does not need to be returned.
+
+3. (Price: $5000) Both options 1 and 2. We will upload data to an Amazon S3 bucket and
+    provide the customer with a hard disk drive.
+
+4. Yearly update for options 1, 2 or 3. The same price as the requested option.
+    A repository copy is sent automatically to the customer every year.
+
+Please contact VDJServer (vdjserver@utsouthwestern.edu) to initiate an order. Other data
+delivery options can be provided as well as training services about the data and data formats.
+Payment is processed through an invoice sent by UT Southwestern Medical Center.
+
 .. toctree::
    :maxdepth: 1
