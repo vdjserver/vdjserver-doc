@@ -80,18 +80,18 @@ downloading through the portal. As this requires additional time and resources b
 VDJServer personnel, we need to impose a data charge for cost recovery. The
 following options are available:
 
-1. (Price: $3500 USD) Upload data to an Amazon S3 bucket. 
+1. (Price: $2000 USD) Upload data to an Amazon S3 bucket. 
     We will upload either to a customer-provided bucket or create a new
     bucket and provide access. In the case that we create the bucket, it
     will only be accessible for a pre-determined amount of time
     (typically one month), so the customer is required to move the data
     into their own bucket.
 
-2. (Price: $3500 USD) FEDEX/UPS a hard disk drive with the data to the customer.
+2. (Price: $2000 USD) FEDEX/UPS a hard disk drive with the data to the customer.
     We purchase a standard SATA hard drive but can use a customer-provided SATA hard drive if desired.
     The hard drive becomes the customer's property and does not need to be returned.
 
-3. (Price: $5000 USD) Both options 1 and 2.
+3. (Price: $3000 USD) Both options 1 and 2.
     We will upload data to an Amazon S3 bucket and provide the customer with a hard disk drive.
 
 4. Yearly update for options 1, 2 or 3.
