@@ -1,11 +1,14 @@
-=======================
+.. _AdministrationGuide:
+
+********************
 Administration Guide
-=======================
+********************
 
 This guide describes the deployment of the VDJServer services on
 computing resources provided by Texas Advanced Computing Center,
-The University of Texas at Austin. VDJServer is maintained by
-Dr Lindsay G. Cowell at UT Southwestern Medical Center.
+The University of Texas at Austin. VDJServer is managed by
+Dr Lindsay G. Cowell at UT Southwestern Medical Center. Dr Scott Christley
+is the software development manager and is responsible for day-to-day operations.
 
 If you log on to this computer system, you acknowledge your awareness
 and acceptance of the UT Austin Acceptable Use Policy. The
