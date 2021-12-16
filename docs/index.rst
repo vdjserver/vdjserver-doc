@@ -16,7 +16,7 @@ through a standard web browser via a graphical user interface designed
 for use by immunologists, clinicians, and bioinformatics researchers.
 
 VDJServer is a large repository in the AIRR Data Commons, and as of
-Feb. 18, 2021 (CDP Release), contains XX studies, XXXX repertoires and XXX rearrangements
+December, 2021 (CDP Release), contains 39 studies, 3408 repertoires and ~2.5B rearrangements
 (annotated sequences). VDJServer provides the functionality to publicly
 share your study and sequence data, as well as privately share data between users.
 
@@ -24,6 +24,7 @@ share your study and sequence data, as well as privately share data between user
    :maxdepth: 2
    :caption: Contents:
 
+    Release Announcements <user/releases>
     Getting Started <user/getting_started>
     User's Guide <user/user>
     Community Data Portal <user/cdp>
