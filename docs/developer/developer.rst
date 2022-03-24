@@ -40,7 +40,7 @@ sharing providing:
 
 The VDJServer system is composed of three core components consisting of
 a graphical user interface (:ref:`VDJServer Web <VDJServerWeb>`), a secure API for performing
-core functions (:ref:`VDJServer API <VDJServerAPI>`), and the Community Data Portal (CDP).
+core functions (:ref:`VDJServer API <VDJServerAPI>`), and the Community Data Portal (:ref:`CDP <CommunityDataPortal>`).
 These core components contain additional sub-components and are tightly
 integrated across the whole system. VDJServer is designed upon the Tapis APIS cloud platform,
 which allows database implementation to be offloaded into the cloud
@@ -519,8 +519,10 @@ Community Data Portal
 
 The Community Data Portal is VDJServer's data sharing infrastructure. It
 consists of a data repository for the AIRR Data Commons and a graphical
-user interface to query and download data from the AIRR Data Commons. The
-infrastructure comprises of a number of sub-components:
+user interface to query and download data from the AIRR Data Commons. The backend API
+components are integrated into the VDJServer Repository (`vdjserver-repository`_) while
+the GUI is included within :ref:`VDJServer Web <VDJServerWeb>`.
+The infrastructure is comprised of a number of sub-components:
 
 + A Mongo database, which is hosted and managed by TACC, to store the AIRR-seq data.
 
@@ -532,7 +534,10 @@ infrastructure comprises of a number of sub-components:
 
 + The graphical user interface for querying and downloading from the AIRR Data Commons is integrated into :ref:`VDJServer Web <VDJServerWeb>`.
 
-+ The 
++ The ADC Download Cache and the functions for loading/unloading studies is currently implemented in the :ref:`VDJServer API <VDJServerAPI>`.
+
+.. _`vdjserver-repository`:
+   https://bitbucket.org/vdjserver/vdjserver-repository
 
 .. _VDJServer_ADC_API:
 
@@ -555,7 +560,55 @@ and any additional information. The metadata UUID is returned as the async API q
 VDJServer STATS API
 ===================
 
+Source code repository: https://bitbucket.org/vdjserver/stats-api-js-tapis
+
 VDJServer implementation of the iReceptor+ Statistics API.
+The ``stats-api-js-tapis`` repository is a git submodule
+in the VDJServer Repository (`vdjserver-repository`_) and is
+integrated with the other services using Docker compose. The STATS API has three main
+subcomponents including the :ref:`Query API <VDJServer_STATS_QUERY_API>`,
+an :ref:`Administration API <VDJServer_STATS_ADMIN_API>`,
+and the :ref:`Statistics Cache <VDJServer_STATS_CACHE>`. An administration GUI
+is included within :ref:`VDJServer Web <VDJServerWeb>`.
+
+.. _`vdjserver-repository`:
+   https://bitbucket.org/vdjserver/vdjserver-repository
+
+.. _VDJServer_STATS_QUERY_API:
+
+Query API
+---------
+
+The query API is defined by the
+`iReceptor+ specification <https://github.com/ireceptor-plus/specifications/blob/master/stats-api.yaml>`_.
+The ``specifications`` repository is brought into ``stats-api-js-tapis`` as a git submodule so
+that versioning can be controlled. The queries are processed in ``statsController.js``
+
+.. _VDJServer_STATS_ADMIN_API:
+
+Administration API
+------------------
+
+The Administration API is defined in a separate YAML file in ``stats-api-js-tapis`` then integrated
+with the Query API when the service starts. The purpose of the Administration API is primarily
+to manage the Statistics Cache. It is composed of some public end points to query cache entries
+but all others require admin authorization. The end points reside under the ``/irplus/v1/stats``
+base URL.
+
++ ``/cache``: Query the global Statistics Cache settings (GET). Enable, disable or trigger the Statistics Cache (POST).
+
++ ``/cache/study``: Query study cache entries (GET).
+
++ ``/cache/study/{cache_uuid}``: Enable/disable caching or reload database for a specific study (POST). Delete the
+  cache for the study including files and database records (DELETE).
+
++ ``/cache/repertoire/{repertoire_id}``: Enable/disable caching for a specific repertoire (POST). Delete the
+  cache for the study including files and database records (DELETE).
+
++ ``/cache/notify/{cache_uuid}``: Job notification (POST). This receives notifications from statistics jobs as
+  their status changes and is not normally called by the admin user.
+
+.. _VDJServer_STATS_CACHE:
 
 Statistics Cache
 ----------------
@@ -564,16 +617,7 @@ To quickly respond to requests for statistics, we cache them. This should only b
 for VDJServer ADC data, as other ADC repositories should implement the Statistics API
 for themselves.
 
-The list of capabilities include:
-
-+ API end point to manually initiate the above queue process.
-
-  + /stats/cache: enable, disable or trigger cache process
-
-+ API end point to enable/disable/delete metadata entries for study/repertoire.
-+ GUI admin screen for administration of the cache.
-
-The caching process will be triggered on a periodic basis using a `Bull` queue setting. The
+The caching process is triggered on a periodic basis using a `Bull` queue setting. The
 time period is a system configuration variable.
 The caching process can be enabled, disabled or triggered with ``/stats/cache`` endpoint.
 When the cache process is disabled, the process will be paused at the next queue checkpoint.
@@ -585,31 +629,147 @@ A singleton metadata entry stores the current state::
   value:
     enable_cache: boolean
 
-While this metadata entry controls global behavior, an individual service also needs the
-`STATS_API_ENABLE_CACHE` environment configuration variable set to `true`.
+This metadata entry controls global behavior, is primarily intended for the production
+service, and should not be used to control development or staging services.
+Each individual service also needs the ``STATS_API_ENABLE_CACHE`` environment
+configuration variable set to `true`. This environment variable should be used to control
+individual services. Be careful of having multiple services generating statistics and
+writing them to the database. There is also a per repository setting in the list of ADC
+repositories, and currently only VDJServer is enabled. The statistics cache environment variables:
+
++ ``STATS_API_PORT=8025``: Default port for service
++ ``STATS_API_ENABLE_CACHE=false``: Enable/disable statistics cache queues for this service.
+  The service will still respond to API requests.
++ ``STATS_MAX_JOBS=10``: Maximum concurrent statistics jobs.
++ ``STATS_TIME_MULTIPLIER=8``: Multiplicative increase of a statistic job's run time when
+  it fails due to a ``TIMEOUT`` error.
++ ``STATS_TAPIS_APP=irplus-statistics-stampede2-0.1u6``: Name of the Tapis statistic app.
+  Currently there is an app defined for Stampede2 and Lonestar6.
++ ``STATS_TAPIS_QUEUE=skx-normal``: Name of execution system queue to use for job submission.
++ ``STATS_TAPIS_APP=irplus-statistics-ls6-0.1u2`` (Alternative): Lonestar 6 app.
++ ``STATS_TAPIS_QUEUE=normal`` (Alternative): Lonestar 6 queue.
+
+The Statistics Cache currently has limited support for the double-buffering scheme used
+by the main ADC repository. There are two collections in the database, ``statistics_0``
+and ``statistics_1``, so that the statistics can be kept separately, but the metadata
+cache entries do not currently support this double-buffering. Future work will add this
+support but is dependent upon the ADC Download Cache.
 
 We use Tapis metadata entries to record cache information for each
-repertoire. The repertoire entry is actually for the rearrangement/clone
+study and repertoire. The repertoire entry is actually for the rearrangement/clone
 data for that repertoire. This service relies upon the ADC Download
-Cache, and it uses that cached data for calculating statistics.
+Cache, and it uses that download cached data for calculating statistics.
 
-Currently, the plan is to also store the actual statistics data in Tapis metadata entries.
-The number of entries is on the order of the number of repertoires, and presumably that data
-will not get so large as to exceed the data size limits.
+There is a metadata entry for each study::
 
-There is metadata entry for the each repertoire::
+  name: statistics_cache_study
+  value:
+    repository_id: string
+    study_id: string
+    download_cache_id: string
+    should_cache: boolean
+    is_cached: boolean
 
-  name: statistics_cache_data
+There is a metadata entry for each repertoire::
+
+  name: statistics_cache_repertoire
   value:
     repository_id: string
     study_id: string
     repertoire_id: string
     should_cache: boolean
     is_cached: boolean
-    rearrangement_statistics: object
-    clone_statistics: object
+    download_cache_id: string
+    statistics_job_id: string
 
-Generating the statistics involves running a Tapis job.
+All of the queues are defined in ``cache-queue.js``. The top-level trigger function called by
+the service is ``CacheQueue.triggerCache`` which checks if the statistics cache is enabled,
+and if yes, submits a repetitive job to ``triggerQueue`` and to ``checkQueue``. The full
+set of queues include:
+
++ ``triggerQueue``: Top level queue for the statistics cache that is run periodically.
+  Checks if the cache is enabled, and if yes, submits job to ``createQueue``.
++ ``createQueue``: Gets the list of ADC repositories and determines which ones have the
+  statistics cache enabled. For each enabled repository, get the list of studies that
+  have been cached in the ADC Download Cache and create statistics cache metadata entries
+  for each study and its repertoires if needed.
++ ``checkQueue``: Top level poll queue for the statistics cache that is run periodically.
+  It checks if any statistics jobs have been submitted or need to be submitted and submits
+  to the ``jobQueue`` if necessary.
++ ``jobQueue``: Gathers statistics cache metadata entries for repertoires that need statistics
+  jobs to be run and submits them to Tapis.
++ ``finishQueue``: Either called directly or when a job notification is received from Tapis.
+  Checks if the job has finished successfully, deletes any previous statistics data from the
+  database, puts the new statistics data into the database, and
+  updates the cache metadata entries. If the job failed, tries to determine if it is due to
+  a TIMEOUT error and increases the run time for new job submission. If the job failed due
+  to an unknown reason, turns off caching for the repertoire and posts an error.
++ ``clearQueue``: Called when an API request is received to delete the statistics cache for
+  either a whole study or a single repertoire. Deletes the data from the database, deletes
+  the job data, and deletes the cache metadata entries. By default, with the statistics cache
+  enabled, the cache metadata entries and statistics data will be regenerated on the next ``triggerQueue``.
++ ``reloadQueue``: Called when an API request is received to reload the statistics cache
+  for a study. The cache metadata entries have there ``is_cached`` set to ``false``, but because
+  they still have a ``statistics_job_id``, the next ``checkQueue`` will act like they are
+  finished jobs and call ``finishQueue``, which will reload the statistics data into the database.
+
+The statistics data will get stored in VDJServer's ADC database. It is expected
+that the statistics for all repertoires will be commonly requested, so that
+will provide the quickest retrieval. An example statistics object for a repertoire is
+around 150KB.
+
+Generating the statistics involves running a Tapis job. This statistics app
+is currently defined in the iReceptor tapis repository. It runs the appropriate
+commands to generate the statistics for a single repertoire then generates an
+output JSON file that matches the response structure for the Stats API. The default
+run time for statistics jobs is one hour, but that is not sufficient for large
+repertoires. The statistics cache attempts to detect when a job fails due to a ``TIMEOUT``
+error and resubmits with a new time multiplied by ``STATS_TIME_MULTIPLIER``. Currently,
+with our largest repertoires, the statistics jobs have not needed more than eight
+hours of run time.
+
+Unfortunately, the response structure of the API for statistics data is not well optimized
+for database queries. Always returning ~3000 * 150KB from the database is slow, especially
+as we never need all of the statistics, only a subset for the specific end point.
+Therefore, when inserting the statistics data into the database, we re-organize
+it so only specific statistics can be returned with projection fields for the query.
+The re-organized object looks like this, where each statistic name is a key in the document::
+
+    {
+        "repertoire": {
+            "repertoire_id": "684559928821354986-242ac113-0001-012",
+            "data_processing_id": null,
+            "sample_processing_id": null
+        },
+        "rearrangement_count": {
+            "statistic_name": "rearrangement_count",
+            "total": 5232174,
+            "data": [
+                {
+                "key": "rearrangement_count",
+                "count": 5232174
+                }
+            ]
+        },
+        "duplicate_count": {
+            "statistic_name": "duplicate_count",
+            "total": 5232174,
+            "data": [
+                {
+                "key": "duplicate_count",
+                "count": 5232174
+                }
+            ]
+        }, ...
+    }
+
+While the rearrangement statistics are fairly well defined, the clone
+statistics have not been. It is unclear if the clone data will be able
+to be stored in the metadata entry like with the rearrangements
+statistics. If we decide to have statistics on each clone, this can get
+very large, as the largest repertoires might have millions of clones. Once
+we start storing clone data into the ADC, we will gain a better understanding
+of the scale.
 
 .. toctree::
    :maxdepth: 1
