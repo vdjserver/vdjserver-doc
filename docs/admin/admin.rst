@@ -59,62 +59,6 @@ With V1, all of the components (nginx, web, api) fit on one VM, but in V2 we
 add the data repository (repository), which should have its own VM. There are
 additional APIs from iReceptor+
 
-SSL Certificate for vdjserver.org
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Once a year, about a month before the expiration date, UTSW's SysOps will send an email
-indicated the vdjserver.org certificate will expire. Installing a new certificate involves
-these main steps:
-
-+ Submit a TACC request for certificate renewal.
-+ TACC generates a certificate signing request (CSR) and private key for vdjserver.org
-+ Submit a UTSW ServiceDesk request with the CSR
-+ Pay for the new certificate
-+ Install the new certificate into vdjserver.org
-
-Because TACC controls the vdjserver.org domain, they have to generate the certificate
-renewal. Generally, after getting TACC to respond to the certificate renewal request,
-they can be put on the same email chain as a UTSW person, and together they work through
-the steps of generating a new certificate.
-
-Sometimes TACC will install the certificate for us, but in case they just give us
-the files, then we can install them. There are two files needed, a private key file
-and the certificate file. When installing, make copies of the existing certificates files
-and be careful not to accidentally overwrite or delete them. The private key file
-is put in the `/etc/pki/tls/private` directory, and the certificate file is put in
-the `/etc/pki/tls/certs` directory. In both cases, there is a `backup`
-subdirectory to put backup copies, e.g., with these commands where `YEAR` is the active
-year for the certificate.
-
-+ ssh to vdjserver.org and become root
-+ cd /etc/pki/tls/certs
-+ copy certificate file to vdjserver.org.cer.YEAR
-+ cp vdjserver.org.cer.YEAR backup
-+ cd /etc/pki/tls/private
-+ copy private key file to vdjserver.org.key.YEAR
-+ cp vdjserver.org.key.YEAR backup
-
-If there are multiple files in the directory, and it is not clear which are the
-current files, look in the nginx config file, `/etc/nginx/nginx.conf`, and
-`ssl_certificate` and `ssl_certificate_key` will have the full path to the files.
-
-If you copy the new files over the old files then there is no need to modify the
-nginx config file, but I suggest using a `YEAR` prefix to keep the files separate.
-This helps accidentally overwriting a file.
-
-+ edit /etc/nginx/nginx.conf and set `ssl_certificate` and `ssl_certificate_key` to
-  the absolute paths to the certificate and private key files.
-+ restart nginx with `systemctl restart nginx`
-+ check nginx is running and no errors with `systemctl status nginx`
-
-Verify that the new certificate is installed by going to vdjserver.org from your
-browser. You may need to refresh and/or clear your cache. Check the certificate
-and verify it has a new expiration date.
-
-Note that these instructions only apply to the vdjserver.org production machine. The vdj-staging,
-vdj-dev, and other VMs are in the tacc.utexas.edu domain. If the certificate expires
-for any of them, submit a TACC request and they will update.
-
 VDJServer Production
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -234,20 +178,61 @@ This maintenance mode only applies to the VDJServer GUI. Other VDJServer service
 the Web API and the ADC repository will still be active. These services have to be shutdown
 if access needs to be disabled.
 
-SSL Certificate
-^^^^^^^^^^^^^^^
+SSL Certificate for vdjserver.org
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The VDJServer SSL certificate is managed through a combination of UTSW IR and
-TACC. Every 1 or 2 years it needs to be renewed. The basic process:
+Once a year, about a month before the expiration date, UTSW's SysOps will send an email
+indicated the vdjserver.org certificate will expire. Installing a new certificate involves
+these main steps:
 
-1. UTSW IR sends an email indicating that the certificate needs to be renewed. Create
-   an IR support ticket to start the process.
-2. Create a TACC issue in the user portal for the certificate renewal.
-3. When TACC responds, typically get the IR and TACC personnel together on the same email chain.
-4. TACC issues a certificate request.
-5. IR gets the certificate signed and sends to TACC.
-6. TACC installs the certificate.
-7. UTSW IR needs an account number for the cost.
++ Submit a TACC request for certificate renewal.
++ TACC generates a certificate signing request (CSR) and private key for vdjserver.org
++ Submit a UTSW ServiceDesk request with the CSR
++ Pay for the new certificate
++ Install the new certificate into vdjserver.org
+
+Because TACC controls the vdjserver.org domain, they have to generate the certificate
+renewal. Generally, after getting TACC to respond to the certificate renewal request,
+they can be put on the same email chain as a UTSW person, and together they work through
+the steps of generating a new certificate.
+
+Sometimes TACC will install the certificate for us, but in case they just give us
+the files, then we can install them. There are two files needed, a private key file
+and the certificate file. When installing, make copies of the existing certificates files
+and be careful not to accidentally overwrite or delete them. The private key file
+is put in the `/etc/pki/tls/private` directory, and the certificate file is put in
+the `/etc/pki/tls/certs` directory. In both cases, there is a `backup`
+subdirectory to put backup copies, e.g., with these commands where `YEAR` is the active
+year for the certificate.
+
++ ssh to vdjserver.org and become root
++ cd /etc/pki/tls/certs
++ copy certificate file to vdjserver.org.cer.YEAR
++ cp vdjserver.org.cer.YEAR backup
++ cd /etc/pki/tls/private
++ copy private key file to vdjserver.org.key.YEAR
++ cp vdjserver.org.key.YEAR backup
+
+If there are multiple files in the directory, and it is not clear which are the
+current files, look in the nginx config file, `/etc/nginx/nginx.conf`, and
+`ssl_certificate` and `ssl_certificate_key` will have the full path to the files.
+
+If you copy the new files over the old files then there is no need to modify the
+nginx config file, but I suggest using a `YEAR` prefix to keep the files separate.
+This helps accidentally overwriting a file.
+
++ edit /etc/nginx/nginx.conf and set `ssl_certificate` and `ssl_certificate_key` to
+  the absolute paths to the certificate and private key files.
++ restart nginx with `systemctl restart nginx`
++ check nginx is running and no errors with `systemctl status nginx`
+
+Verify that the new certificate is installed by going to vdjserver.org from your
+browser. You may need to refresh and/or clear your cache. Check the certificate
+and verify it has a new expiration date.
+
+Note that these instructions only apply to the vdjserver.org production machine. The vdj-staging,
+vdj-dev, and other VMs are in the tacc.utexas.edu domain. If the certificate expires
+for any of them, submit a TACC request and they will update.
 
 VDJServer Users Mailing List
 ----------------------------
