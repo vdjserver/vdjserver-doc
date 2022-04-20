@@ -1,6 +1,10 @@
+.. _ReleaseAnnouncements:
+
 ===============================
 Release Announcements
 ===============================
+
+.. _VDJServerReleaseAnnouncements:
 
 **********************************************
 VDJServer Web Analysis Portal
@@ -184,6 +188,8 @@ This release was made available for public use on June 9, 2016.
 == VDJServer Release 0.9.0 ==
 
 This release was made available for public use on March 23, 2016.
+
+.. _RepositoryReleaseAnnouncements:
 
 **********************************************
 VDJServer Repository for the AIRR Data Commons
