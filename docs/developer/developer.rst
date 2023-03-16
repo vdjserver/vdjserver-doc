@@ -169,6 +169,30 @@ Both are POST methods where a ``Feedback`` or ``PublicFeedback`` object is sent 
 body for ``/feedback`` or ``/feedback/public`` endpoints, respectively. The ``/feedback`` endpoint
 has ``user_authorization`` security while the public does not.
 
+Project Views
+----------------
+
+File Uploading
+--------------
+
+File uploading is a three step process:
+
+#. Upload the file using Tapis Files API.
+
+#. The Tapis API stages (copies) the file to the destination storage system.
+
+#. Metadata entry is created and permissions are set.
+
+VDJServer V1 used a webhook technique for the server to inform the web browser client when
+the staging process by Tapis API was done; however this communication stream often did not
+work and the UI would appear to be hung. Likewise, the metadata creation and permissions is
+performed by a queue so it happens asynchronously with the client. For V2, rewrote the uploading
+code so the browser actively waits and checks for all three steps to finish before it signals
+that the file upload is complete.
+
+Also, the upload code is put in the file controller object so that the views can be destroyed
+and re-created without disturbing the upload process. This should allow the user limited
+navigation to other screens and can still go back and check upload progress.
 
 .. _VDJServerAPI:
 
