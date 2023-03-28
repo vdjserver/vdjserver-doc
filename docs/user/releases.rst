@@ -1,11 +1,17 @@
+.. _ReleaseAnnouncements:
+
 ===============================
 Release Announcements
 ===============================
 
+<<<<<<< HEAD
 .. contents:: Table of Contents
    :depth: 2
    :local:
    :backlinks: none
+=======
+.. _VDJServerReleaseAnnouncements:
+>>>>>>> c9dd583cfe512d5b906885b6c4f605b549146003
 
 **********************************************
 VDJServer Web Analysis Portal
@@ -13,6 +19,13 @@ VDJServer Web Analysis Portal
 
 We are pleased to announce a new release of VDJServer analysis portal, VDJServer
 Community Data Portal, and associated immune repertoire analysis tools.
+
+We are in the transition from V1 to V2.
+
+VDJServer Community Data Portal V2 (Beta)
+=========================================
+
+This release was made available for public use on May 19th, 2022.
 
 VDJServer Release 1.1.3
 =======================
@@ -189,6 +202,8 @@ This release was made available for public use on June 9, 2016.
 == VDJServer Release 0.9.0 ==
 
 This release was made available for public use on March 23, 2016.
+
+.. _RepositoryReleaseAnnouncements:
 
 **********************************************
 VDJServer Repository for the AIRR Data Commons

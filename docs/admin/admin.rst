@@ -404,5 +404,80 @@ window.
    any duplicates will be automatically filtered out. Emails will also to the mailing list
    owners indicating that the emails have been successfully subscribed.
 
+Project Data Loads into the AIRR Data Commons
+---------------------------------------------
+
+VDJServer has two processes for publicly sharing project data. The first is project publishing
+which makes metadata, files and analysis results available for read-only access by the public. Project
+publishing can be done by the user, as it is quick, and mainly involves setting permissions on the data.
+The second is loading project data into the VDJServer repository for the AIRR Data Commons.
+This is manually initiated by a VDJServer administrator because loading the rearrangement data
+can take a long time, and additional processes should occur, like generating the download cache
+and statistics, before the data is made public.
+
+Loading rearrangement data can be very time-consuming. Not just due to the amount of data to be loaded,
+but in particular the `junction_suffixes` index, which is used to optimize CDR3 substring searches,
+imposes significant overhead. Furthermore, we do not want to load data into the production database that is currently
+responding to public queries, because query results may be actively changing while data is being loaded. This
+has the potential to generate unreproducible results for users. Because of this, we have designed a system
+with two features for optimization.
+
++ Double-buffering scheme. One set of collections for production queries, and another set of collections
+  for data loading. The roles of the collections are switched when the current data load collections are
+  put into production, and conversely the current production collections are setup for data loading. This
+  also means the studies need to be loaded twice.
++ Delete the `junction_suffixes` index for the data loading collections.
+
+In general, the production VDJServer repository (`https://vdjserver.org/airr/v1`) points to the production
+query collections, while the staging VDJServer repository (`https://vdj-staging.tacc.utexas.edu/airr/v1`)
+points to the data loading collections. Setting the collections for a service involves changing the
+environment config file for `MONGODB_QUERY_COLLECTION` and `MONGODB_LOAD_COLLECTION` to either `_0` or
+`_1` based upon which collections are which. These settings are in the VDJServer repository service
+and in the VDJServer API service. The former handles queries and the statistics cache, while the latter handles
+the download cache and the data loading functions. 
+
+New Release of the VDJServer Repository
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We strive to perform a periodic release, e.g., every 3-6 months, of the VDJServer repository
+so that any loaded studies will be made publicly available. The primary steps are:
+
++ Create the `junction_suffixes` index on the rearrangement collection.
++ Ensure that the ADC Download Cache has been populated for the new studies so that they can downloaded
+  when the repository is made public.
++ Ensure that the Statistics Cache has been populated for the new studies so that they will be
+  available when the repository is made public.
++ Write a brief release announcement and update the :ref:`Release Announcements <RepositoryReleaseAnnouncements>`.
++ Inform iReceptor (and possibly others) so they can perform any updates. Generally, the staging collection
+  should be tested on iReceptor Gateway staging to expose any issues with increased database size.
++ Flip the values for the `MONGODB_QUERY_COLLECTION` and `MONGODB_LOAD_COLLECTION` settings in the
+  environment config for both production services and restart the services. This will make the database live.
++ Verify that queries are working to the new production database in VDJServer CDP. Check that the new
+  studies are available with statistics and can be downloaded.
++ Send an email with the release announcement to the VDJServer Users Mailing List.
+
+Prepare the staging VDJServer Repository for Data Loading
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Assuming a new release of the VDJServer Repository was put into production, the staging repository
+should be setup so that it can be used for data loading.
+
++ Flip the values for the `MONGODB_QUERY_COLLECTION` and `MONGODB_LOAD_COLLECTION` settings in the
+  environment config for the staging VDJServer repository service and restart the service.
++ Verify that the `MONGODB_LOAD_COLLECTION` for VDJServer API is pointing to the data loading collections.
+  We do not want to accidentally load data into the production collections.
++ Delete the `junction_suffixes` index on the data loading rearrangement collection.
+
+Because of the double-buffering scheme, the staging repository, which used to be the production
+repository, is missing all of the new studies that were recently made public. Therefore, the
+first steps should be:
+
++ Determine the set of studies that were newly made public.
++ Load those studies into the staging repository.
+
+After those studies have been loaded, the staging repository should be identical to the production
+repository. Verify that the number of repertoires and rearrangement counts match between the
+two collections. Finally, start loading any new studies.
+
 .. toctree::
    :maxdepth: 1
