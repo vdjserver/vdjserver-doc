@@ -4,6 +4,11 @@
 Administration Guide
 ********************
 
+.. contents:: Table of Contents
+   :depth: 2
+   :local:
+   :backlinks: none
+
 This guide describes the deployment of the VDJServer services on
 computing resources provided by Texas Advanced Computing Center,
 The University of Texas at Austin. VDJServer is managed by
@@ -41,23 +46,129 @@ Other VMs include:
 + vdj-rep-03: V2 API
 + vdj-rep-04: open
 
-SSL Security
-^^^^^^^^^^^^
+VM Setup
+^^^^^^^^
+
+We try to avoid customizing the VMs when possible to reduce maintenance and allow
+for services to be more easily migrated from on VM to another. More details about
+each is provided in their own individual section below.
+
+* docker, for VDJServer programs
+* nginx, for SSL certificates and proxy
+* nfs, for mounting Corral disk
+
+Docker
+^^^^^^
+
+We use docker exclusively for running the VDJServer server programs on the VMs. Standard
+installation docker for CentOS: https://docs.docker.com/engine/install/centos/
+
+Be sure to enable docker with systemctl so that it gets started on reboot::
+
+ systemctl enable docker
+ systemctl enable containerd
+
+Also add the vdj user and any others to the docker group::
+
+ usermod -aG docker vdj
+ usermod -aG docker another_user
+
+nginx and SSL Security
+^^^^^^^^^^^^^^^^^^^^^^
 
 SSL security is handled at the system level versus in each server
 process. Specifically, a system `nginx` is installed as a proxy to
 accept https requests and reroutes them to a local port or to a port on
 another VM. Incoming non-secure http requests are redirected to https,
-but proxied requests went to server processes are sent over http. The
-config file `/etc/nginx/nginx.conf` should be kept simple, if possible,
+but proxied requests going to server processes are sent over http. Though proxied
+requests to other VMs could be changed to https for additional security.
+The config file `/etc/nginx/nginx.conf` should be kept simple, if possible,
 to route all locations to a single port. A second `nginx` which runs as
 part of the `docker-compose` and is http, can then handle the routing of
 specific locations to specific services. This allows flexibility in
-deployment without having to continually modify the system config file.
+deployment without having to continually modify the system config file::
+
+ yum install nginx
+
+After you have nginx configured properly, make sure to enable the service
+with systemctl so that it gets started on reboot::
+
+ systemctl start nginx
+ systemctl enable nginx
+
+It's probably best not to try to create the configuration from scratch but
+copy from an existing nginx configuration.
+The current setup is to have one section for redirecting http to https
+as shown here for the vdj-dev VM::
+
+    server {
+        listen         80;
+        server_name    vdj-dev.tacc.utexas.edu www.vdj-dev.tacc.utexas.edu;
+        return         301 https://vdj-dev.tacc.utexas.edu$request_uri;
+    }
+
+and another section to route the https request to the local nginx port within
+the docker containers. Note that we've had to add a number of custom headers
+to responses for security purposes::
+
+    server {
+        listen       443 ssl;
+        server_name  vdj-dev.tacc.utexas.edu;
+
+        #root /var/www/html/vdjserver-backbone/live-site;                                                                                                                                
+
+        #ssl                  on;                                                                                                                                                        
+        ssl_certificate      /etc/pki/tls/certs/vdj-dev.tacc.utexas.edu.cer;
+        ssl_certificate_key  /etc/pki/tls/private/vdj-dev.tacc.utexas.edu.key;
+
+        ssl_session_timeout  5m;
+
+        ssl_protocols TLSv1.2;
+        ssl_ciphers  EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH;
+        ssl_prefer_server_ciphers   on;
+        ssl_dhparam /etc/ssl/certs/dhparam.pem;
+
+        if ($host ~ /^www\./) {
+            rewrite ^(.*) https://vdj-dev.tacc.utexas.edu$1 permanent;
+        }
+
+        # Deny all attempts to access hidden files                                                                                                                                       
+        # such as .htaccess, .htpasswd, .DS_Store (Mac).                                                                                                                                 
+        location ~ /\. {
+          deny all;
+        }
+
+        # route everything to local nginx in the VDJServer docker container
+        location / {
+            proxy_pass http://127.0.0.1:8080;                                                                                                                                           
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_read_timeout 86400;
+            # additional security headers required by TACC                                                                                                                               
+            add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+            add_header X-Frame-Options SAMEORIGIN always;
+            add_header X-Content-Type-Options nosniff always;
+            add_header Content-Security-Policy "default-src https: wss: 'self' 'unsafe-inline' 'unsafe-eval'" always;
+            add_header X-XSS-Protection "1" always;
+            add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+            add_header Permissions-Policy "geolocation=(self)" always;
+        }
+
+    }
+
+Whenever you change nginx.conf, you need to reload it in the running service::
+
+ nginx -s reload
 
 With V1, all of the components (nginx, web, api) fit on one VM, but in V2 we
-add the data repository (repository), which should have its own VM. There are
-additional APIs from iReceptor+
+add the data repository (repository), which should have its own VM, and there may
+be additional services added later.
+
+Tapis V2 Auth Server
+^^^^^^^^^^^^^^^^^^^^
+
+The Tapis V2 Auth server for VDJServer (vdj-auth)
 
 VDJServer Production
 ^^^^^^^^^^^^^^^^^^^^
@@ -114,9 +225,10 @@ Corral Disk
 Some API services requires direct access to the Corral project disks so that it can
 access files more efficiently versus going through the Tapis API.
 TACC needs to enable NFS mount for any VM that will access.
-To mount the disk, the VM needs the `nfs-client` software::
+To mount the disk, the VM needs the NFS software. We don't enable any of the
+systemd services because we only want the NFS client and not run an NFS server::
 
- sudo yum install nfs-client
+ sudo yum install nfs-utils
 
 Create the mount folder and set its permission::
 
@@ -125,9 +237,9 @@ Create the mount folder and set its permission::
  sudo chgrp G-803419 /vdjZ
  sudo chmod a+rw /vdjZ
 
-An entry needs to be put into the system `/etc/fstab` so that it is mounted on VM start.
+An entry needs to be put into the system `/etc/fstab` so that it is mounted on VM start::
 
- c3-dtn02.corral.tacc.utexas.edu:/gpfs/corral3/repl/projects/vdjZ	/vdjZ	nfs          rw,proto=tcp,nfsvers=3,nosuid,rsize=1024768,wsize=1024768,intr      0 0
+ 129.114.52.166:/corral/main/projects/vdjZ   /vdjZ   nfs   rw,proto=tcp,nfsvers=3,nosuid,rsize=1024768,wsize=1024768,intr 0 0
 
 Note that only the vdj account is allowed to write the project disk, even root is
 not allowed. This means you need to switch to the vdj account if you want to work

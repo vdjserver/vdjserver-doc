@@ -4,6 +4,11 @@
 Developer's Guide
 *****************
 
+.. contents:: Table of Contents
+   :depth: 2
+   :local:
+   :backlinks: none
+
 This developer's guide documents the design and implementation of the
 VDJServer system with emphasis on the processes and data structures used
 to implement the functionality. VDJServer contains numerous server-side
@@ -54,6 +59,17 @@ their main functionality. VDJServer utilizes Docker for composing
 services run on VMs provided by the Texas Advanced Computing Center
 (TACC), which also provides resource allocation for running analysis
 jobs on HPC.
+
+.. _VDJServerSchema:
+
+VDJServer Schema
+================
+
+Source code repository: https://bitbucket.org/vdjserver/vdjserver-schema
+
+VDJServer Schema defines all objects utilized across the VDJServer services in
+a central place. Similar to the AIRR Standards, VDJServer Schema objects are
+defined using the OpenAPI V3 specification extensions to JSON schema.
 
 .. _VDJServerWeb:
 
@@ -200,9 +216,9 @@ them together, adds fault tolerance and error checking, and often executes them 
 to be performed asynchronously and autonomously.
 
 The V1 design only have VDJServer API, but V2 now has multiple services that access Tapis.
-The ``tapis-vdj`` repository is a javascript package which provides a large set of functions
+The ``vdj-tapis-js`` repository is a javascript package which provides a large set of functions
 that encapsulate Tapis API requests that is shared across all services. Those services use
-the ``tapis-vdj`` functions instead of directly calling Tapis, and this allows us to
+the ``vdj-tapis-js`` functions instead of directly calling Tapis, and this allows us to
 provide consistent error handling. The exception to this is :ref:`VDJServer Web <VDJServerWeb>`
 which uses Backbone models to communicate with Tapis. However, we try to avoid doing complex
 operations in the GUI by putting them within the VDJServer API instead, and any operation

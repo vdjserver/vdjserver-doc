@@ -2,6 +2,11 @@
 Release Announcements
 ===============================
 
+.. contents:: Table of Contents
+   :depth: 2
+   :local:
+   :backlinks: none
+
 **********************************************
 VDJServer Web Analysis Portal
 **********************************************
@@ -191,6 +196,18 @@ VDJServer Repository for the AIRR Data Commons
 
 We are pleased to announce a new release of the VDJServer Repository,
 an AIRR-compliant data repository in the AIRR Data Commons.
+
+December 2022
+=============
+
+All studies in the VDJServer Repository were converted and validated to the
+AIRR Standards v1.4. ADC API was updated to v1.2. The new AIRR standards includes
+draft objects for Clones, Cells, and others; however no data for the AIRR draft
+objects are currently loaded into the VDJServer Repository, but the service will respond to
+the new query APIs for these objects in the ADC API v1.2.
+
+The iReceptorPlus Statistics API v0.3 has been implemented and statistics are
+available for all studies in the VDJServer Repository.
 
 December 2021
 =============
