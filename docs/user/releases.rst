@@ -1,17 +1,13 @@
-.. _ReleaseAnnouncements:
+.. _VDJServerReleaseAnnouncements:
 
 ===============================
 Release Announcements
 ===============================
 
-<<<<<<< HEAD
 .. contents:: Table of Contents
    :depth: 2
    :local:
    :backlinks: none
-=======
-.. _VDJServerReleaseAnnouncements:
->>>>>>> c9dd583cfe512d5b906885b6c4f605b549146003
 
 **********************************************
 VDJServer Web Analysis Portal
@@ -199,7 +195,8 @@ This release was made available for public use on June 9, 2016.
   + Better manage expired tokens in the web-app.
   + Fixed bugs for detection of CYS and PHE/TRP by rep_char (`issue #24 <https://bitbucket.org/vdjserver/repertoire-summarization/issues/24>`_).
 
-== VDJServer Release 0.9.0 ==
+VDJServer Release 0.9.0
+=========================
 
 This release was made available for public use on March 23, 2016.
 
@@ -216,7 +213,7 @@ December 2022
 =============
 
 All studies in the VDJServer Repository were converted and validated to the
-AIRR Standards v1.4. ADC API was updated to v1.2. The new AIRR standards includes
+AIRR Standards v1.4. The ADC API was updated to v1.2. The new AIRR Standards includes
 draft objects for Clones, Cells, and others; however no data for the AIRR draft
 objects are currently loaded into the VDJServer Repository, but the service will respond to
 the new query APIs for these objects in the ADC API v1.2.
