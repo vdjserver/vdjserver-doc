@@ -165,10 +165,66 @@ With V1, all of the components (nginx, web, api) fit on one VM, but in V2 we
 add the data repository (repository), which should have its own VM, and there may
 be additional services added later.
 
+Corral Disk
+^^^^^^^^^^^
+
+Some API services requires direct access to the Corral project disks so that it can
+access files more efficiently versus going through the Tapis API.
+TACC needs to enable NFS mount for any VM that will access.
+To mount the disk, the VM needs the NFS software. We don't enable any of the
+systemd services because we only want the NFS client and not run an NFS server::
+
+ sudo yum install nfs-utils
+
+Create the mount folder and set its permission::
+
+ sudo mkdir /vdjZ
+ sudo chown vdj /vdjZ
+ sudo chgrp G-803419 /vdjZ
+ sudo chmod a+rw /vdjZ
+
+An entry needs to be put into the system `/etc/fstab` so that it is mounted on VM start::
+
+ 129.114.52.166:/corral/main/projects/vdjZ   /vdjZ   nfs   rw,proto=tcp,nfsvers=3,nosuid,rsize=1024768,wsize=1024768,intr 0 0
+
+Note that only the vdj account is allowed to write the project disk, even root is
+not allowed. This means you need to switch to the vdj account if you want to work
+with the files at the command line. Also, API service programs must change their
+group and user in order to access.
+
 Tapis V2 Auth Server
 ^^^^^^^^^^^^^^^^^^^^
 
-The Tapis V2 Auth server for VDJServer (vdj-auth)
+The Tapis V2 Auth server for VDJServer (vdj-agave-api.tacc.utexas.edu). Due to security
+issues, this server may become restricted to TACC (no public access) at any time. In which
+need to utilize vdjserver.org as proxy.
+
+VDJServer Development
+^^^^^^^^^^^^^^^^^^^^^
+
+This deployment is meant to support the development process. While a significant amount of
+development can be done on a local machine, there are number of functions that require the
+deployment environment to work properly. Some of these include:
+
+* Google captcha.
+* Notifications from Tapis.
+* Access to TACC restricted resources.
+
+Set up directory for vdj account::
+
+ mkdir -p /var/www/docker
+ chown vdj /var/www/docker
+ chgrp G-803419 /var/www/docker
+
+Then as vdj account can pull down the appropriate source repositories and setup services::
+
+ su - vdj
+ cd /var/www/docker
+ git clone https://bitbucket.org/vdjserver/vdjserver-web.git
+
+Should avoid doing source code development with the vdj account, i.e. avoid doing commits
+and pushes with the source code in /var/www/docker. Use it strictly for pulling changes.
+Instead use your personal account and manually start/stop the services to test.
 
 VDJServer Production
 ^^^^^^^^^^^^^^^^^^^^
@@ -181,16 +237,6 @@ VDJServer Staging
 
 This is the staging deployment of VDJServer. 
 
-VDJServer Development
-^^^^^^^^^^^^^^^^^^^^^
-
-This deployment is meant to support the development process. While a significant amount of
-development can be done on a local machine, there are number of functions that require the
-deployment environment to work properly. Some of these include:
-
-* Google captcha.
-* Notifications from Tapis.
-* Access to TACC restricted resources.
 
 Additional VMs
 ^^^^^^^^^^^^^^
@@ -218,33 +264,6 @@ try to use the same port number for both.
 * 8021: VDJServer ADC Async API, `/airr/async/v1`.
 * 8025: VDJServer iR+ Stats API, `/irplus/stats/v1`.
 * 8027: VDJServer iR+ Analysis API, `/irplus/analysis/v1`.
-
-Corral Disk
-^^^^^^^^^^^
-
-Some API services requires direct access to the Corral project disks so that it can
-access files more efficiently versus going through the Tapis API.
-TACC needs to enable NFS mount for any VM that will access.
-To mount the disk, the VM needs the NFS software. We don't enable any of the
-systemd services because we only want the NFS client and not run an NFS server::
-
- sudo yum install nfs-utils
-
-Create the mount folder and set its permission::
-
- sudo mkdir /vdjZ
- sudo chown vdj /vdjZ
- sudo chgrp G-803419 /vdjZ
- sudo chmod a+rw /vdjZ
-
-An entry needs to be put into the system `/etc/fstab` so that it is mounted on VM start::
-
- 129.114.52.166:/corral/main/projects/vdjZ   /vdjZ   nfs   rw,proto=tcp,nfsvers=3,nosuid,rsize=1024768,wsize=1024768,intr 0 0
-
-Note that only the vdj account is allowed to write the project disk, even root is
-not allowed. This means you need to switch to the vdj account if you want to work
-with the files at the command line. Also, API service programs must change their
-group and user in order to access.
 
 Processes and Checklists
 ------------------------
