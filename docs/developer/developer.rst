@@ -266,11 +266,143 @@ There is an additional ``admin_authorization`` for the highest
 authorization. All of the authorization code is contained in
 ``authController.js``.
 
+Analysis Workflows
+------------------
+
+The V1 design had a number of limitations that made it challenging to maintain. In particular,
+there was tight coupling between the GUI and the Tapis app definitions. Changes to parameters
+needed to be performed in both places, and reproducibility would get lost as those apps were
+modified and updated over time. This also introduced tight coupling between the apps themselves
+as outputs became inputs for the next app in the workflow. Providing flexibility in these output/input
+matchings, along with flexibility within the workflow, was challenging because there are
+many possible combinations. This would grow more complex as more tools and features were added.
+Furthermore, to reduce the amount of coupling, the Tapis apps were
+written to be monolithic, performing many operations in a single job. With Tapis V3, there
+is less ability to design large monolithic apps because apps must be containerized and
+only a single container image can be used. This also prevents us from doing multi-node parallelism
+with the ``launcher`` module as it cannot operate inside the singularity environment.
+
+With the VDJServer V2 design, we introduce a number of changes to reduce tight coupling,
+to increase flexibility, and to manage parallelism.
+
++ Declarative task workflow description that is agnostic to the Tapis app description. It is
+  based upon the PROV provenance standard and is designed to easily generate a PROV model
+  as the provenance for the workflow.
+
++ Task workflows can be validated to insure all files, apps, etc., are present and valid before
+  attempting to run any jobs.
+
++ Task workflows can utilize any number of Tapis apps in series or in parallel. Task workflows
+  are directed acyclic graphs that get translated into a set of Tapis jobs. Tapis V3 provides
+  a workflow API but it is custom to the Tapis environment, and it is unclear if it is flexible
+  enough for our requirements.
+
++ Output/input matching is more explicit and does not rely upon file names.
+
++ Analysis workflows are organized around repertoires and repertoire groups.
+
++ Tapis apps should be simpler as they do not have to manage multi-node parallelism.
+
+One of the primary results of the V2 design is that many more Tapis jobs will get executed,
+which requires that we better and robust management for those jobs. For example, a project
+with 20 repertoires might have run one job to process those repertoires but now may require
+multiple jobs as parallelism is handled outside of the Tapis app.
+
+Workflow execution
+^^^^^^^^^^^^^^^^^^
+
+End point: ``/project/{project_uuid}/execute``
+
+Submission of an ``AnalysisRequest`` containing the ``AnalysisDocument`` to be validated
+and executed. The ``AnalysisDocument`` is composed of a ``TaskDocument`` and a ``ProvDocument``.
+The ``TaskDocument`` describe the workflow tasks to be performed, while the ``ProvDocument``
+will be filled out with provenance information as the tasks are performed. The ``AnalysisDocument``
+is stored in the database with the Tapis Meta API.
+
+ProvDocument and TaskDocument
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The PROV model provides a general provenance description that is agnostic to the objects
+and activities being performed. This means that we need to enhance the model with additional
+attributes to provide semantics for analysis workflows. It has three core objects:
+
++ ``agent``: The person or computational agent attributed to the activities. For VDJServer,
+  this is either the user or the associated project depending upon the context.
+
++ ``entity``: The things that the activities are operating upon such as
+  repertoires, repertoire groups, files, data, etc.
+
++ ``activity``: Operations to perform on entities. For VDJServer, these are primarily Tapis apps
+  but also support specialized operations like ADC queries.
+
+The primary relations between these objects that VDJServer uses are:
+
++ <entity> ``wasAttributedTo`` <agent>: Ownership of entity by the agent.
+
++ <activity> ``wasAssociatedWith`` <agent>: Association of an activity with an agent.
+
++ <entity> ``used`` <activity>: Activity uses an entity, essentially a reference to an input
+  to the activity.
+
++ <entity> ``wasGeneratedBy`` <activity>: Activity generated an entity, essentially a reference
+  to an output produced by the activity.
+
++ <entity> ``wasDerivedFrom`` <entity> by <activity>: Entity derived from another entity, possibly by an
+  activity though not required. For activities that process multiple inputs and produce multiple
+  outputs, this relation provides explicit input/output matching that does not rely upon file names
+  or other imprecise attributes.
+
+These relations have additional attributes which are not described here. Also note that all of
+the relations are past tense English, and thus indicate that the activities have already occurred.
+For the ``TaskDocument``, we keep the same relations but transform them to present tense
+English. This provides a nice duality with a simple description of a task workflow.
+
++ <entity> ``isAttributedTo`` <agent>
+
++ <activity> ``isAssociatedWith`` <agent>
+
++ <entity> ``uses`` <activity>
+
++ <entity> ``isGeneratedBy`` <activity>
+
++ <entity> ``isDerivedFrom`` <entity> by <activity>
+
+Tapis Job Queues
+^^^^^^^^^^^^^^^^
+
+While the Tapis APIs handle the details of staging, submitting, monitoring, and archiving jobs
+for the storage and execution systems, VDJServer needs to perform its own pre- and post-processing of jobs.
+VDJServer also needs to detect when jobs fail due to insufficient runtime versus other errors
+so those jobs can be re-scheduled with longer runtime. There are a number of ``bull`` queues
+that manage the various processes. They are designed to be reentrant which, in the single-threaded
+environment of Javascript node, means that it can be interrupted, and a new execution can be
+safely restarted. Note that we expect VDJServer to only be running one server process, so we
+do not expect the processes to be running concurrently on multiple machines.
+Interrupts include bringing the server down, network outages, Tapis APIs
+outages, and so forth. The key to reentrancy is maintaining state as the process progresses
+so the code can determine the last operations that were performed. Also, any operations that
+are re-performed upon the new execution should not produce inconsistent states, e.g. double
+counting, and should avoid inefficiencies like re-running jobs that were already submitted
+or ran correctly. Here are the ``bull`` queues that manage Tapis jobs:
+
++ trigger
+
++ check
+
++ create
+
++ job
+
++ finish
+
++ clear
+
+
 ADC endpoints
-^^^^^^^^^^^^^
+-------------
 
 ADC system repositories
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 End point: ``/adc/registry``
 
@@ -336,7 +468,7 @@ used::
         disable: boolean
 
 ADC Load and Unload
--------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Loading and unloading studies from the :ref:`Community Data Portal
 <CommunityDataPortal>` can be initiated with requests to the API. Both
