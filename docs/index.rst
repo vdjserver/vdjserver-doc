@@ -20,6 +20,26 @@ December, 2021 (CDP Release), contains 39 studies, 3408 repertoires and ~2.5B re
 (annotated sequences). VDJServer provides the functionality to publicly
 share your study and sequence data, as well as privately share data between users.
 
+If you use VDJServer, please cite:
+
+* Christley S, Scarborough W, Salinas E, Rounds WH, Toby IT, Fonner JM,
+  Levin MK, Kim M, Mock SA, Jordan C, Ostmeyer J, Buntzman A, Rubelt F,
+  Davila ML, Monson NL, Scheuermann RH, Cowell LG. VDJServer: A
+  Cloud-Based Analysis Portal and Data Commons for Immune Repertoire
+  Sequences and Rearrangements. Front Immunol. 2018 May 8;9:976. doi:
+  `10.3389/fimmu.2018.00976 <https://doi.org/10.3389/fimmu.2018.00976>`_.
+  `PMID:29867956 <https://pubmed.ncbi.nlm.nih.gov/29867956/>`_;
+  `PMCID:PMC5953328 <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5953328/>`_.
+
+* Christley S, Aguiar A, Blanck G, Breden F, Bukhari SAC, Busse CE,
+  Jaglale J, Harikrishnan SL, Laserson U, Peters B, Rocha A, Schramm CA,
+  Taylor S, Vander Heiden JA, Zimonja B, Watson CT, Corrie B, Cowell LG.
+  The ADC API: A Web API for the Programmatic Query of the AIRR Data
+  Commons. Front Big Data. 2020 Jun 17;3:22. doi:
+  `10.3389/fdata.2020.00022 <https://doi.org/10.3389/fdata.2020.00022>`_.
+  `PMID:33693395 <https://pubmed.ncbi.nlm.nih.gov/33693395>`_;
+  `PMCID:PMC7931935 <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7931935>`_.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
