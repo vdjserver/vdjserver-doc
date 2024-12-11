@@ -18,6 +18,34 @@ Community Data Portal, and associated immune repertoire analysis tools.
 
 We are in the transition from V1 to V2.
 
+VDJServer V1 is being decommissioned. VDJServer V2 soon to be released!
+=======================================================================
+
+After almost ten years of providing a free, publicly-accessible web portal for
+immune repertoire analysis, VDJServer V1 will be discontinued. It will be replaced
+by VDJServer V2. An upcoming announcement will be made when V2 is available for users.
+A few highlights about the V2 release:
+
++ **VDJServer V2 Highlights**
+
+  + VDJServer user accounts will be replaced with external identity providers such as GitHub, Google, and etc.
+  + Completely redesigned graphical user interface.
+  + MiAIRR compliant study, subject and sample metadata entry based upon the `AIRR Standards <https://docs.airr-community.org>`_
+  + Migration to Tapis V3 infrastructure.
+
+For users of VDJServer V1, be assured that your files, data, metadata, analysis jobs
+and results are still archived on VDJServer. We will work with users to migrate their
+data to VDJServer V2.
+
+VDJServer Release 1.2.0
+=======================
+
+This release was made available for public use on May 19th, 2024.
+
++ **Other Notes**
+
+  + Move VDJServer repositories to `GitHub <https://github.com/vdjserver>`_.
+
 VDJServer Community Data Portal V2 (Beta)
 =========================================
 
