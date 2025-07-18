@@ -47,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'VDJServer'
-copyright = '2017-2021, UT Southwestern Medical Center'
+copyright = '2017-2025, UT Southwestern Medical Center'
 author = 'UT Southwestern Medical Center'
 
 # The version info for the project you're documenting, acts as replacement for
