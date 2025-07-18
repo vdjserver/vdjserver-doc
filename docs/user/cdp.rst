@@ -1,3 +1,5 @@
+.. _CommunityDataPortal:
+
 =======================
 Community Data Portal
 =======================

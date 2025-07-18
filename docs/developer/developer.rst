@@ -45,7 +45,7 @@ sharing providing:
 
 The VDJServer system is composed of three core components consisting of
 a graphical user interface (:ref:`VDJServer Web <VDJServerWeb>`), a secure API for performing
-core functions (:ref:`VDJServer API <VDJServerAPI>`), and the Community Data Portal (:ref:`CDP <CommunityDataPortal>`).
+core functions (:ref:`VDJServer API <VDJServerAPI>`), and the Community Data Portal (:ref:`CDP <CommunityDataPortalDev>`).
 These core components contain additional sub-components and are tightly
 integrated across the whole system. VDJServer is designed upon the Tapis APIS cloud platform,
 which allows database implementation to be offloaded into the cloud
@@ -471,7 +471,7 @@ ADC Load and Unload
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Loading and unloading studies from the :ref:`Community Data Portal
-<CommunityDataPortal>` can be initiated with requests to the API. Both
+<CommunityDataPortalDev>` can be initiated with requests to the API. Both
 API end points are protected by ``admin_authorization``. Note that loading
 and unloading from the ADC is different from publishing and unpublishing
 a study which can be done by a project user.
@@ -684,7 +684,7 @@ that we want to support. We use a set of Bull queues to handle the progression o
 `ADCDownloadQueueManager.triggerDownloadCache` is the initialization routine that turn on
 the queue. It also submits a periodic (TODO: config) job to the triggerQueue.
 
-.. _CommunityDataPortal:
+.. _CommunityDataPortalDev:
 
 Community Data Portal
 =====================
