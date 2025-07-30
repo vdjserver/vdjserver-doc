@@ -32,25 +32,27 @@ as https://vdjserver.org. These are full public deployments in that Google Recap
 emails, and other system services should be accessible and functional.
 
 These VMs cannot be accessed by ssh outside of TACC, so you first
-need to ssh to a public TACC machine such as ls5.tacc.utexas.edu or
-stampede2.tacc.utexas.edu. Furthermore, they all require 2-factor authentication
-with the TACC Token app. The publicly accessible ports are 80, 443 and
-8443; the first two being the standard http/https ports while 8443 is
-for testing on vdj-dev. SSL Security as explained below is configured
+need to ssh to a public TACC machine such as ls6.tacc.utexas.edu.
+Furthermore, they all require 2-factor authentication
+with the TACC Token app. The only publicly accessible ports are 
+standard http/https ports of 80 and 443. SSL Security as explained below is configured
 on each of the deployment VMs.
 
-Other VMs include:
+Other backend VMs include:
 
-+ vdj-rep-01: data.vdjserver.org Tapis storage system, production ADC
-+ vdj-rep-02: staging ADC
++ vdj-rep-01: data-storage.vdjserver.org Tapis storage system, production Mongo DB
++ vdj-rep-02: production ADC API
 + vdj-rep-03: V2 API
 + vdj-rep-04: open
+
+These backend VMs are not publicly accessible, and network traffic to these VMs
+are protected by firewall rules.
 
 VM Setup
 ^^^^^^^^
 
 We try to avoid customizing the VMs when possible to reduce maintenance and allow
-for services to be more easily migrated from on VM to another. More details about
+for services to be more easily migrated from one VM to another. More details about
 each is provided in their own individual section below.
 
 * docker, for VDJServer programs
@@ -80,8 +82,8 @@ SSL security is handled at the system level versus in each server
 process. Specifically, a system `nginx` is installed as a proxy to
 accept https requests and reroutes them to a local port or to a port on
 another VM. Incoming non-secure http requests are redirected to https,
-but proxied requests going to server processes are sent over http. Though proxied
-requests to other VMs could be changed to https for additional security.
+but proxied requests going to server processes are sent over http. Proxied
+requests to other VMs use https for additional security.
 The config file `/etc/nginx/nginx.conf` should be kept simple, if possible,
 to route all locations to a single port. A second `nginx` which runs as
 part of the `docker-compose` and is http, can then handle the routing of
@@ -192,12 +194,32 @@ not allowed. This means you need to switch to the vdj account if you want to wor
 with the files at the command line. Also, API service programs must change their
 group and user in order to access.
 
-Tapis V2 Auth Server
-^^^^^^^^^^^^^^^^^^^^
+Tapis V3
+^^^^^^^^
 
-The Tapis V2 Auth server for VDJServer (vdj-agave-api.tacc.utexas.edu). Due to security
-issues, this server may become restricted to TACC (no public access) at any time. In which
-need to utilize vdjserver.org as proxy.
+The Tapis V3 Tenant server for VDJServer is `vdjserver.tapis.io`, and
+the staging server is `vdjserver.staging.tapis.io`. Each needs to be
+separately configured with clients, token accounts, storage and execution
+systems, permissions, and apps. Token accounts are created by Tapis
+administrators; these are long-lived token accounts separate from
+standard user accounts that are used for automated testing and command
+line automation. These accounts cannot be used to login to the VDJServer
+web portal because they lack OAuth authentication. The JSON description
+files for systems and apps are stored in the
+[vdjserver-tapis](https://github.com/vdjserver/vdjserver-tapis) repository
+with setup instructions. Setup is performed at the command line using the
+`vdjserver-tools` python program which resides in that repository.
+
+TACC firewall rules need to be defined to allow Tapis machines access to the
+backend VMs. The two primary uses are for file transfers and for database access
+through the Meta API.
+
+Google Email Accounts
+^^^^^^^^^^^^^^^^^^^^^
+
+A couple of google email accounts have been created for testing purposes. There
+is also a google email account for centralizing study curation for the ADC. These
+accounts can be used to login to the VDJServer web portal.
 
 VDJServer Development
 ^^^^^^^^^^^^^^^^^^^^^
@@ -243,10 +265,10 @@ Additional VMs
 
 There are four additional VMs that can be used for running API services.
 
-* vdj-rep-01: This is the current production machine for VDJServer ADC API. It is also
-  the Tapis storage system `data.vdjserver.org`, which is actually a proxy to access the
+* vdj-rep-01: This is the current production machine for the Mongo DB. It is also
+  the Tapis storage system `data-storage.vdjserver.org`, which is actually a proxy to access the
   Corral project storage mounted at `/vdjZ`.
-* vdj-rep-02: This is the current staging machine for VDJServer ADC API and for iR+ APIs.
+* vdj-rep-02: This is the current production machine for VDJServer ADC API.
 * vdj-rep-03: This is the current staging machine for VDJServer API V2.
 * vdj-rep-04: This is currently open.
 
@@ -258,15 +280,18 @@ avoid conflict, we try to use unique ports for each service. To complicate matte
 services run within docker containers and internal ports can be exposed differently, but we
 try to use the same port number for both.
 
-* 8080: nginx https proxy.
-* 8080: VDJServer API V1, `/api/v1`.
+* 80/443: nginx https proxy (host machine).
+* 8080: nginx proxy (inside docker container).
+* 8081: VDJServer API V2, `/api/v2`.
 * 8020: VDJServer ADC API, `/airr/v1`.
 * 8021: VDJServer ADC Async API, `/airr/async/v1`.
 * 8025: VDJServer iR+ Stats API, `/irplus/stats/v1`.
-* 8027: VDJServer iR+ Analysis API, `/irplus/analysis/v1`.
 
 Processes and Checklists
 ------------------------
+
+New Release of the VDJServer Web Portal
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Start/Stop Services
 ^^^^^^^^^^^^^^^^^^^
@@ -311,6 +336,8 @@ if access needs to be disabled.
 
 SSL Certificate for vdjserver.org
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+NOTE: OBSOLETE. This section is obsolete and needs to be rewritten.
 
 Once a year, about a month before the expiration date, UTSW's SysOps will send an email
 indicated the vdjserver.org certificate will expire. Installing a new certificate involves
@@ -367,6 +394,8 @@ for any of them, submit a TACC request and they will update.
 
 VDJServer Users Mailing List
 ----------------------------
+
+NOTE: OBSOLETE. This section is obsolete and needs to be rewritten.
 
 We utilize UTSW's mailing list service, running GNU mailman, to manage VDJServer's user
 mailing list. Currently, the process is not automated and new users must be manually
