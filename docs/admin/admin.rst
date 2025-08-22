@@ -293,6 +293,80 @@ Processes and Checklists
 New Release of the VDJServer Web Portal
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Deploying a new release of the VDJServer Web Portal involves
+two main steps.
+
+* Create new releases for all of the repositories.
+* Deploying the new release on the production (or staging, dev) VM.
+
+Create Release of Repositories
+++++++++++++++++++++++++++++++
+
+New release of all the components that have changed. Some of
+these are libraries that are used by multiple services, these are:
+
+* vdjserver-schema
+* vdj-tapis-js
+
+Then the web portal submodules are:
+
+* vdjserver-web-api
+* vdjserver-web-backbone
+* vdjserver-web-nginx
+* vdjserver-web-plumber
+
+To make a release, merge all the applicable pull requests. If there are no changes
+to the submodule, then we do not need to make a new release for that submodule.
+For submodules that have changes, we need to determine the next version number
+and set in the appropriate file.
+
+* For vdjserver-schema, make sure the new version number is in `package.json`.
+* For vdj-tapis-js, make sure the new version number is in `package.json`.
+
+* For vdjserver-web, there is no file with a version number.
+* For vdjserver-web-api, make sure the new version number is in `package.json`.
+* For vdjserver-web-backbone, make sure the new version number is in `package.json`.
+* For vdjserver-web-nginx, there is no file with a version number.
+* For vdjserver-web-plumber, current no file with a version number.
+
+For vdjserver-web, we should use a clean git clone directory.
+
+* git clone https://github.com/vdjserver/vdjserver-web.git vdjserver-web-clean
+* git submodule update --init --recursive
+* for each submodule, checkout master branch and pull all the new changes.
+* If the submodule has its own submodules, then do the submodule init command to bring them up-to-date.
+* Finally, commit those submodules and create new release of vdjserver-web.
+
+Deploy Release to VM at TACC
+++++++++++++++++++++++++++++
+
+* ssh login to ls6.tacc.utexas.edu with your user account
+* ssh login to vdj-prod.tacc.utexas.edu (production VM) or vdj-staging.tacc.utexas.edu (staging VM) or vdj-dev.tacc.utexas.edu (dev VM)
+* ``docker ps`` will show if services are currently running. Also ``systemctl status vdjserver`` will show if services are automatically started on the system.
+* ``sudo bash`` to become root.
+* ``su - vdj`` to become the vdj account.
+* ``cd /var/www/docker`` where the code resides.
+* git clone into a new version directory, e.g. for version 2.8.0, ``git clone https://github.com/vdjserver/vdjserver-web.git vdjserver-web-v2.8.0``
+* cd into that new version directory and initialize the submodules ``git submodule update --init --recursive``
+* migrate the configurations files
+    * For vdjserver-web-api, this is the ``.env`` file.
+    * For vdjserver-web-backbone, this is the ``environment-config.js`` file
+* cd into the docker-compose/v2 directory from the top-level vdjserver-web directory and setup ``.env`` to point to appropriate DATA_ROOT directory.
+* do a ``docker compose build``
+* If everything builds ok, exit this terminal to go back to root user.
+* stop the current running service with ``systemctl stop vdjserver``
+* ``cd /var/www/docker`` and swap the current version directory with the new version.
+    * rename the ``vdjserver-web`` directory to old version name, e.g. ``mv vdjserver-web vdjserver-web-v2.7.0``
+    * rename the new version directory to ``vdjserver-web``, e.g. ``mv vdjserver-web-v2.8.0 vdjserver-web```
+* start the service with ``systemctl start vdjserver``
+* after the service is up, verify that you can login.
+
+The disk space on these VMs is pretty small, and the docker images will start filling up the space, so
+it's a good idea to prune the images and volumes occasionally.
+
+* ``df -h .`` will show you the current disk usage.
+* ``docker system prune --volumes`` will clean up docker disk space.
+
 Start/Stop Services
 ^^^^^^^^^^^^^^^^^^^
 
